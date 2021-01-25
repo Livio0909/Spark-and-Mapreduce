@@ -56,7 +56,7 @@ Thành phần trung của Spark là Spark Core: cung cấp những chức năng 
 <h2 id="_tai-lieu-tham-khao-8">Tài liệu tham khảo</h2>
 <ol>
 <li>Learning Spark by Matei Zaharia, Patrick Wendell, Andy Konwinski, Holden Karau</li>
-<li><a href="https://www.tutorialspoint.com/apache_spark/apache_spark_introduction.htm" target="_blank">https://viblo.asia/p/tong-quan-ve-apache-spark-cho-he-thong-big-data-RQqKLxR6K7z</a></li>
-<li><a href="https://www.tutorialspoint.com/apache_spark/apache_spark_introduction.htm" target="_blank">https://viblo.asia/p/tong-quan-ve-apache-spark-cho-he-thong-big-data-RQqKLxR6K7z</a></li>
+<li><a href="https://www.tutorialspoint.com/apache_spark/apache_spark_introduction.htm" target="_blank">https://www.tutorialspoint.com/apache_spark/apache_spark_introduction.htm</a></li>
+<li><a href="https://viblo.asia/p/tong-quan-ve-apache-spark-cho-he-thong-big-data-RQqKLxR6K7z" target="_blank">https://viblo.asia/p/tong-quan-ve-apache-spark-cho-he-thong-big-data-RQqKLxR6K7z</a></li>
 </ol>
 </div>
