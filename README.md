@@ -55,8 +55,7 @@ Thành phần trung của Spark là Spark Core: cung cấp những chức năng 
 <p>Và trên đây là bài viết giới thiệu tổng quan về Apache Spark, hy vọng các bạn có thể tìm thấy những điều bổ ích trong đó. Bài viết chắc chắn vẫn còn sự thiếu sót, mình rất mong nhận được sự góp ý của các bạn.</p>
 <h2 id="_tai-lieu-tham-khao-8">Tài liệu tham khảo</h2>
 <ol>
-<li>Learning Spark by Matei Zaharia, Patrick Wendell, Andy Konwinski, Holden Karau</li>
-<li><a href="https://www.tutorialspoint.com/apache_spark/apache_spark_introduction.htm" target="_blank">https://www.tutorialspoint.com/apache_spark/apache_spark_introduction.htm</a></li>
-<li><a href="https://viblo.asia/p/tong-quan-ve-apache-spark-cho-he-thong-big-data-RQqKLxR6K7z" target="_blank">https://viblo.asia/p/tong-quan-ve-apache-spark-cho-he-thong-big-data-RQqKLxR6K7z</a></li>
+<li><a href="https://www.talend.com/resources/what-is-mapreduce/" target="_blank">https://www.talend.com/resources/what-is-mapreduce/</a></li>
+<li><a href="https://blog.itnavi.com.vn/mapreduce-nhung-uu-diem-va-cach-thuc-hoat-dong-cua-nen-tang-nay/" target="_blank">https://blog.itnavi.com.vn/mapreduce-nhung-uu-diem-va-cach-thuc-hoat-dong-cua-nen-tang-nay/</a></li>
 </ol>
 </div>
