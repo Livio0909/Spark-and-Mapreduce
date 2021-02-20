@@ -38,8 +38,6 @@
 
 <h3>3.	Các tính năng của Spark RDD</h3>
 
-![Image3](/images/RDD_3.png)
-
 <p>RDD có các tính năng như là:</p>
  
 ![Image3](/images/RDD_3.png)
