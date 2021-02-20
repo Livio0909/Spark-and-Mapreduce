@@ -12,7 +12,11 @@
 
 <p>Do đó, mỗi và mọi tập dữ liệu trong RDD được phân vùng một cách hợp lý trên nhiều máy chủ để chúng có thể được tính toán trên các node khác nhau của cụm.  RDD có khả năng chịu lỗi, tức là nó có khả năng tự phục hồi trong trường hợp bị lỗi.</p>
  
+ ![Image1](/images/RDD_1.png)
+ 
 <p>Có ba cách để tạo RDD trong Spark, chẳng hạn như - Dữ liệu bộ lưu trữ ổn định (Data in stable storage), các RDD khác và song song hóa collection đã tồn tại trong chương trình trình điều khiển.  Người ta cũng có thể vận hành Spark RDD song song với một API cấp thấp cung cấp các chuyển đổi (transformings) và hành động (actions)</p>
+ 
+  ![Image2](/images/RDD_2.png)
  
 <p>Đặc điểm quan trọng của 1 RDD là số partitions. Một RDD bao gồm nhiều partition nhỏ, mỗi partition này đại diện cho 1 phần dữ liệu phân tán. Khái niệm partition là logical, tức là 1 node xử lý có thể chứa nhiều hơn 1 RDD partition. Theo mặc định, dữ liệu các partitions sẽ lưu trên memory. Thử tưởng tượng ta cần xử lý 1TB dữ liệu, nếu lưu hết trên mem tính ra thì cung khá tốn kém. Tất nhiên nếu ta có 1TB ram để xử lý thì tốt quá nhưng điều đó không cần thiết. Với việc chia nhỏ dữ liệu thành các partition và cơ chế lazy evaluation của Spark ta có thể chỉ cần vài chục GB ram và 1 chương trình được thiết kế tốt để xử lý 1TB dữ liệu, chỉ là sẽ chậm hơn có nhiều RAM thôi</p>
 
@@ -34,8 +38,11 @@
 
 <h3>3.	Các tính năng của Spark RDD</h3>
 
+![Image3](/images/RDD_3.png)
+
 <p>RDD có các tính năng như là:</p>
  
+![Image3](/images/RDD_3.png)
 
 <h4>3.1.	Tính toán trên RAM (In-Memory Computation)</h4>
 
@@ -65,7 +72,9 @@
 </ul>
 
 <p>Transformation và Action hoạt động giống như DataFrame lẫn DataSets. Transformation xử lý các thao tác lazily và Action xử lý thao tác cần xử lý tức thời<p>
- 
+
+![Image4](/images/RDD_4.png)
+
 <h4>4.1.	Transformations</h4>
 
 <p>Spark RDD Tranformations là một hàm nhận vào một RDD và trả về một hay nhiều RDD khác. RDD ban đầu sẽ không bị thay đổi vì RDD mang tính bất biến (Immutability) mà nó sẽ sinh ra các RDD mới bằng các áp dụng các phương thức như Map(), filter(), reduceByKey(), …</p>
@@ -97,6 +106,8 @@
 </ul>
 
 <h3>5.	Giới hạn của Spark RDD</h3>
+
+![Image5](/images/RDD_5.png)
  
 <h4>5.1.	Không có công cụ tối ưu sẵn</h4>
 <p>Khi làm việc với cấu trúc dữ liệu, RDD không thể phát huy tối đa lợi thế từ bộ tối ưu của Spark như catalyst optimizer and Tungsten execution engine</p>
