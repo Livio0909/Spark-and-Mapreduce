@@ -297,8 +297,75 @@ lsvcModel = lsvc.fit(training_data)
 lsvcModel.transform(test_data)
 ```
 
+<h4>Demo</h4>
+
+<p>Trong phần này sẽ tạo thử một mô hình demo bằng framework PySpark. Ta sẽ sử dụng dataset là Banking Marketing để dự đoán khách hàng như thế nào thì chiến dịch marketting sẽ thành công kêu gọi khách hàng tham gia đăng kí dịch vụ</p>
+<p>Dataset này được lấy trên trang <a href="https://www.kaggle.com/">Kaggle</a> được đăng bởi user <a href="https://www.kaggle.com/rouseguy">Rouseguy</a>. Bạn có thể tải lấy dataset <a href="https://www.kaggle.com/rouseguy/bankbalanced/data">tại đây</a> nếu muốn chạy thử demo
+
+<p>Bắt đầu thực nghiệm hóa mô hình bằng framework PySpark</p>
+<p>Công việc đầu tiên chúng ta sẽ khởi tạo <b>SparkSession</b> và dùng nó để đọc dataset</p>
+
+```python
+from pyspark.sql import SparkSession,SQLContext
+
+# Khởi tạo SparkSession và đặt tên SparkSession đó là "Bank Marketing"
+spark = SparkSession.builder.appName("Banking Marketing").getOrCreate();
+
+# Ta sẽ dùng SparkSession vừa khởi tạo để đọc dataset bằng lệnh SparkSession.read.csv(<tên file>)
+# Tham số header để khai báo file dataset có header nếu không khai báo thì header trong dataset sẽ mang vô thành data luôn
+# Tham số inferSchema sẽ giúp hàm đọc dataset dự đoán kiểu dữ liệu và đổ vào cho hợp lí để loại trừ các dòng bị lệch hay thiếu số nhưng tốc độ sẽ bị chậm
+dataframe = spark.read.csv("drive/MyDrive/Colab Notebooks/bank.csv", header=True, inferSchema=True)
+```
+
+<p>Để kiểm tra dataset đọc có thành công không ta dùng <b>dataframe.show()</b> để hiện ra dataset chúng ta trông như thế nào</p>
+
+```python
+dataframe.show()
+
+Output:
++---+-----------+--------+---------+-------+-------+-------+----+-------+---+-----+--------+--------+-----+--------+--------+-------+
+|age|        job| marital|education|default|balance|housing|loan|contact|day|month|duration|campaign|pdays|previous|poutcome|deposit|
++---+-----------+--------+---------+-------+-------+-------+----+-------+---+-----+--------+--------+-----+--------+--------+-------+
+| 59|     admin.| married|secondary|     no|   2343|    yes|  no|unknown|  5|  may|    1042|       1|   -1|       0| unknown|    yes|
+| 56|     admin.| married|secondary|     no|     45|     no|  no|unknown|  5|  may|    1467|       1|   -1|       0| unknown|    yes|
+| 41| technician| married|secondary|     no|   1270|    yes|  no|unknown|  5|  may|    1389|       1|   -1|       0| unknown|    yes|
+| 55|   services| married|secondary|     no|   2476|    yes|  no|unknown|  5|  may|     579|       1|   -1|       0| unknown|    yes|
+| 54|     admin.| married| tertiary|     no|    184|     no|  no|unknown|  5|  may|     673|       2|   -1|       0| unknown|    yes|
+| 42| management|  single| tertiary|     no|      0|    yes| yes|unknown|  5|  may|     562|       2|   -1|       0| unknown|    yes|
+| 56| management| married| tertiary|     no|    830|    yes| yes|unknown|  6|  may|    1201|       1|   -1|       0| unknown|    yes|
+| 60|    retired|divorced|secondary|     no|    545|    yes|  no|unknown|  6|  may|    1030|       1|   -1|       0| unknown|    yes|
+| 37| technician| married|secondary|     no|      1|    yes|  no|unknown|  6|  may|     608|       1|   -1|       0| unknown|    yes|
+| 28|   services|  single|secondary|     no|   5090|    yes|  no|unknown|  6|  may|    1297|       3|   -1|       0| unknown|    yes|
+| 38|     admin.|  single|secondary|     no|    100|    yes|  no|unknown|  7|  may|     786|       1|   -1|       0| unknown|    yes|
+| 30|blue-collar| married|secondary|     no|    309|    yes|  no|unknown|  7|  may|    1574|       2|   -1|       0| unknown|    yes|
+| 29| management| married| tertiary|     no|    199|    yes| yes|unknown|  7|  may|    1689|       4|   -1|       0| unknown|    yes|
+| 46|blue-collar|  single| tertiary|     no|    460|    yes|  no|unknown|  7|  may|    1102|       2|   -1|       0| unknown|    yes|
+| 31| technician|  single| tertiary|     no|    703|    yes|  no|unknown|  8|  may|     943|       2|   -1|       0| unknown|    yes|
+| 35| management|divorced| tertiary|     no|   3837|    yes|  no|unknown|  8|  may|    1084|       1|   -1|       0| unknown|    yes|
+| 32|blue-collar|  single|  primary|     no|    611|    yes|  no|unknown|  8|  may|     541|       3|   -1|       0| unknown|    yes|
+| 49|   services| married|secondary|     no|     -8|    yes|  no|unknown|  8|  may|    1119|       1|   -1|       0| unknown|    yes|
+| 41|     admin.| married|secondary|     no|     55|    yes|  no|unknown|  8|  may|    1120|       2|   -1|       0| unknown|    yes|
+| 49|     admin.|divorced|secondary|     no|    168|    yes| yes|unknown|  8|  may|     513|       1|   -1|       0| unknown|    yes|
++---+-----------+--------+---------+-------+-------+-------+----+-------+---+-----+--------+--------+-----+--------+--------+-------+
+only showing top 20 rows
+```
+
+<p>Tiếp theo ta sẽ thực hiện xử lý dữ liệu thành kiểu dữ liệu thành các con số để có thể train được mô hình</p>
+<p>Ta sẽ sử dụng <b>StringIndexer</b> để chuyển kiểu dữ liệu chuỗi sang số</p>
+
+```python
+from pyspark.ml.feature import StringIndexer
+
+for i in dataframe.schema:
+  indexer = StringIndexer()
+  indexer.setInputCol(i).setOutputCol(i+"_indexer")
+  df = indexer.fit(df).transform(df)
+```
+
+<p>Thông qua <b>Output</b> trên ta thấy cột job, marital, education, default, housing, loan, contact, month, poutcome và deposit là có kiểu dữ liệu
 <h1>Tài liệu tham khảo</h1>
 <ul>
   <li>[1] https://viblo.asia/p/tim-hieu-ve-apache-spark-ByEZkQQW5Q0</li> 
-  <li>[2] https://towardsdatascience.com/machine-learning-at-scale-with-apache-spark-mllib-python-example-b32a9c74c610</li> 
+  <li>[2] https://towardsdatascience.com/machine-learning-at-scale-with-apache-spark-mllib-python-example-b32a9c74c610</li>
+  <li>[3] https://spark.apache.org/docs/latest/ml-features.html#vectorassembler</li>
 </ul>
