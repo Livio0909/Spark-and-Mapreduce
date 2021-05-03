@@ -314,7 +314,7 @@ spark = SparkSession.builder.appName("Banking Marketing").getOrCreate();
 # Ta sẽ dùng SparkSession vừa khởi tạo để đọc dataset bằng lệnh SparkSession.read.csv(<tên file>)
 # Tham số header để khai báo file dataset có header nếu không khai báo thì header trong dataset sẽ mang vô thành data luôn
 # Tham số inferSchema sẽ giúp hàm đọc dataset dự đoán kiểu dữ liệu và đổ vào cho hợp lí để loại trừ các dòng bị lệch hay thiếu số nhưng tốc độ sẽ bị chậm
-dataframe = spark.read.csv("drive/MyDrive/Colab Notebooks/bank.csv", header=True, inferSchema=True)
+dataframe = spark.read.csv("bank.csv", header=True, inferSchema=True)
 ```
 
 <p>Để kiểm tra dataset đọc có thành công không ta dùng <b>dataframe.show()</b> để hiện ra dataset chúng ta trông như thế nào</p>
@@ -351,21 +351,192 @@ only showing top 20 rows
 ```
 
 <p>Tiếp theo ta sẽ thực hiện xử lý dữ liệu thành kiểu dữ liệu thành các con số để có thể train được mô hình</p>
-<p>Ta sẽ sử dụng <b>StringIndexer</b> để chuyển kiểu dữ liệu chuỗi sang số</p>
+<p>Ta sẽ sử dụng <b>StringIndexer</b> để chuyển kiểu dữ liệu chuỗi sang số. Nhưng <b>StringIndexer</b> chỉ có thể dùng cho cột có kiểu dữ liệu là String. Ta sẽ dùng <b>dataframe.printSchema()</b> để in ra màn hình kiểu dữ liệu của các cột rồi ta sẽ lựa những cột kiểu String ra và thực hiện chuyển String sang số</p>
+
+```python
+dataframe.printSchema()
+
+Output:
+root
+ |-- age: integer (nullable = true)
+ |-- job: string (nullable = true)
+ |-- marital: string (nullable = true)
+ |-- education: string (nullable = true)
+ |-- default: string (nullable = true)
+ |-- balance: integer (nullable = true)
+ |-- housing: string (nullable = true)
+ |-- loan: string (nullable = true)
+ |-- contact: string (nullable = true)
+ |-- day: integer (nullable = true)
+ |-- month: string (nullable = true)
+ |-- duration: integer (nullable = true)
+ |-- campaign: integer (nullable = true)
+ |-- pdays: integer (nullable = true)
+ |-- previous: integer (nullable = true)
+ |-- poutcome: string (nullable = true)
+ |-- deposit: string (nullable = true)
+```
+
+<p>Từ output trên ta thấy cột job, marital, education, default, balance, housing, loan, contact, month, poutcome, deposit là kiểu dữ liệu String. Ta lấy tên của các cột đó vào 1 mảng và dùng <b>StringIndexer</b> chuyển sang dạng số hết</p>
 
 ```python
 from pyspark.ml.feature import StringIndexer
 
-for i in dataframe.schema:
+#Mảng chứa tên các cột cần chuyển đổi
+string_features = ['job', 'marital', 'education', 'default', 'housing', 'loan', 'contact','month', 'poutcome', 'deposit']
+
+for i in string_features:
+
+  #Khởi tạo StringIndexer
   indexer = StringIndexer()
+  
+  #Cột đưa vào tên i và cột trả về tên i+"_indexer"
   indexer.setInputCol(i).setOutputCol(i+"_indexer")
-  df = indexer.fit(df).transform(df)
+  
+  #Thực hiện chuyển đổi và thêm cột mới đã được chuyển đổi vào dataframe
+  dataframe = indexer.fit(dataframe).transform(dataframe)
+
+dataframe.show()
+
+Output:
++---+-----------+--------+---------+-------+-------+-------+----+-------+---+-----+--------+--------+-----+--------+--------+-------+-----------+---------------+-----------------+---------------+---------------+------------+---------------+-------------+----------------+---------------+
+|age|        job| marital|education|default|balance|housing|loan|contact|day|month|duration|campaign|pdays|previous|poutcome|deposit|job_indexer|marital_indexer|education_indexer|default_indexer|housing_indexer|loan_indexer|contact_indexer|month_indexer|poutcome_indexer|deposit_indexer|
++---+-----------+--------+---------+-------+-------+-------+----+-------+---+-----+--------+--------+-----+--------+--------+-------+-----------+---------------+-----------------+---------------+---------------+------------+---------------+-------------+----------------+---------------+
+| 59|     admin.| married|secondary|     no|   2343|    yes|  no|unknown|  5|  may|    1042|       1|   -1|       0| unknown|    yes|        3.0|            0.0|              0.0|            0.0|            1.0|         0.0|            1.0|          0.0|             0.0|            1.0|
+| 56|     admin.| married|secondary|     no|     45|     no|  no|unknown|  5|  may|    1467|       1|   -1|       0| unknown|    yes|        3.0|            0.0|              0.0|            0.0|            0.0|         0.0|            1.0|          0.0|             0.0|            1.0|
+| 41| technician| married|secondary|     no|   1270|    yes|  no|unknown|  5|  may|    1389|       1|   -1|       0| unknown|    yes|        2.0|            0.0|              0.0|            0.0|            1.0|         0.0|            1.0|          0.0|             0.0|            1.0|
+| 55|   services| married|secondary|     no|   2476|    yes|  no|unknown|  5|  may|     579|       1|   -1|       0| unknown|    yes|        4.0|            0.0|              0.0|            0.0|            1.0|         0.0|            1.0|          0.0|             0.0|            1.0|
+| 54|     admin.| married| tertiary|     no|    184|     no|  no|unknown|  5|  may|     673|       2|   -1|       0| unknown|    yes|        3.0|            0.0|              1.0|            0.0|            0.0|         0.0|            1.0|          0.0|             0.0|            1.0|
+| 42| management|  single| tertiary|     no|      0|    yes| yes|unknown|  5|  may|     562|       2|   -1|       0| unknown|    yes|        0.0|            1.0|              1.0|            0.0|            1.0|         1.0|            1.0|          0.0|             0.0|            1.0|
+| 56| management| married| tertiary|     no|    830|    yes| yes|unknown|  6|  may|    1201|       1|   -1|       0| unknown|    yes|        0.0|            0.0|              1.0|            0.0|            1.0|         1.0|            1.0|          0.0|             0.0|            1.0|
+| 60|    retired|divorced|secondary|     no|    545|    yes|  no|unknown|  6|  may|    1030|       1|   -1|       0| unknown|    yes|        5.0|            2.0|              0.0|            0.0|            1.0|         0.0|            1.0|          0.0|             0.0|            1.0|
+| 37| technician| married|secondary|     no|      1|    yes|  no|unknown|  6|  may|     608|       1|   -1|       0| unknown|    yes|        2.0|            0.0|              0.0|            0.0|            1.0|         0.0|            1.0|          0.0|             0.0|            1.0|
+| 28|   services|  single|secondary|     no|   5090|    yes|  no|unknown|  6|  may|    1297|       3|   -1|       0| unknown|    yes|        4.0|            1.0|              0.0|            0.0|            1.0|         0.0|            1.0|          0.0|             0.0|            1.0|
+| 38|     admin.|  single|secondary|     no|    100|    yes|  no|unknown|  7|  may|     786|       1|   -1|       0| unknown|    yes|        3.0|            1.0|              0.0|            0.0|            1.0|         0.0|            1.0|          0.0|             0.0|            1.0|
+| 30|blue-collar| married|secondary|     no|    309|    yes|  no|unknown|  7|  may|    1574|       2|   -1|       0| unknown|    yes|        1.0|            0.0|              0.0|            0.0|            1.0|         0.0|            1.0|          0.0|             0.0|            1.0|
+| 29| management| married| tertiary|     no|    199|    yes| yes|unknown|  7|  may|    1689|       4|   -1|       0| unknown|    yes|        0.0|            0.0|              1.0|            0.0|            1.0|         1.0|            1.0|          0.0|             0.0|            1.0|
+| 46|blue-collar|  single| tertiary|     no|    460|    yes|  no|unknown|  7|  may|    1102|       2|   -1|       0| unknown|    yes|        1.0|            1.0|              1.0|            0.0|            1.0|         0.0|            1.0|          0.0|             0.0|            1.0|
+| 31| technician|  single| tertiary|     no|    703|    yes|  no|unknown|  8|  may|     943|       2|   -1|       0| unknown|    yes|        2.0|            1.0|              1.0|            0.0|            1.0|         0.0|            1.0|          0.0|             0.0|            1.0|
+| 35| management|divorced| tertiary|     no|   3837|    yes|  no|unknown|  8|  may|    1084|       1|   -1|       0| unknown|    yes|        0.0|            2.0|              1.0|            0.0|            1.0|         0.0|            1.0|          0.0|             0.0|            1.0|
+| 32|blue-collar|  single|  primary|     no|    611|    yes|  no|unknown|  8|  may|     541|       3|   -1|       0| unknown|    yes|        1.0|            1.0|              2.0|            0.0|            1.0|         0.0|            1.0|          0.0|             0.0|            1.0|
+| 49|   services| married|secondary|     no|     -8|    yes|  no|unknown|  8|  may|    1119|       1|   -1|       0| unknown|    yes|        4.0|            0.0|              0.0|            0.0|            1.0|         0.0|            1.0|          0.0|             0.0|            1.0|
+| 41|     admin.| married|secondary|     no|     55|    yes|  no|unknown|  8|  may|    1120|       2|   -1|       0| unknown|    yes|        3.0|            0.0|              0.0|            0.0|            1.0|         0.0|            1.0|          0.0|             0.0|            1.0|
+| 49|     admin.|divorced|secondary|     no|    168|    yes| yes|unknown|  8|  may|     513|       1|   -1|       0| unknown|    yes|        3.0|            2.0|              0.0|            0.0|            1.0|         1.0|            1.0|          0.0|             0.0|            1.0|
++---+-----------+--------+---------+-------+-------+-------+----+-------+---+-----+--------+--------+-----+--------+--------+-------+-----------+---------------+-----------------+---------------+---------------+------------+---------------+-------------+----------------+---------------+
+only showing top 20 rows
 ```
 
-<p>Thông qua <b>Output</b> trên ta thấy cột job, marital, education, default, housing, loan, contact, month, poutcome và deposit là có kiểu dữ liệu
+<p>Tiếp theo ta sẽ bỏ các cột kiểu String đi để cho dataframe bây giờ chỉ có kiểu số là duy nhất</p>
+
+```python
+#Bỏ các cột kiểu String
+dataframe = dataframe.drop(*string_features)
+dataframe.show()
+
+Output:
++---+-------+---+--------+--------+-----+--------+-----------+---------------+-----------------+---------------+---------------+------------+---------------+-------------+----------------+---------------+
+|age|balance|day|duration|campaign|pdays|previous|job_indexer|marital_indexer|education_indexer|default_indexer|housing_indexer|loan_indexer|contact_indexer|month_indexer|poutcome_indexer|deposit_indexer|
++---+-------+---+--------+--------+-----+--------+-----------+---------------+-----------------+---------------+---------------+------------+---------------+-------------+----------------+---------------+
+| 59|   2343|  5|    1042|       1|   -1|       0|        3.0|            0.0|              0.0|            0.0|            1.0|         0.0|            1.0|          0.0|             0.0|            1.0|
+| 56|     45|  5|    1467|       1|   -1|       0|        3.0|            0.0|              0.0|            0.0|            0.0|         0.0|            1.0|          0.0|             0.0|            1.0|
+| 41|   1270|  5|    1389|       1|   -1|       0|        2.0|            0.0|              0.0|            0.0|            1.0|         0.0|            1.0|          0.0|             0.0|            1.0|
+| 55|   2476|  5|     579|       1|   -1|       0|        4.0|            0.0|              0.0|            0.0|            1.0|         0.0|            1.0|          0.0|             0.0|            1.0|
+| 54|    184|  5|     673|       2|   -1|       0|        3.0|            0.0|              1.0|            0.0|            0.0|         0.0|            1.0|          0.0|             0.0|            1.0|
+| 42|      0|  5|     562|       2|   -1|       0|        0.0|            1.0|              1.0|            0.0|            1.0|         1.0|            1.0|          0.0|             0.0|            1.0|
+| 56|    830|  6|    1201|       1|   -1|       0|        0.0|            0.0|              1.0|            0.0|            1.0|         1.0|            1.0|          0.0|             0.0|            1.0|
+| 60|    545|  6|    1030|       1|   -1|       0|        5.0|            2.0|              0.0|            0.0|            1.0|         0.0|            1.0|          0.0|             0.0|            1.0|
+| 37|      1|  6|     608|       1|   -1|       0|        2.0|            0.0|              0.0|            0.0|            1.0|         0.0|            1.0|          0.0|             0.0|            1.0|
+| 28|   5090|  6|    1297|       3|   -1|       0|        4.0|            1.0|              0.0|            0.0|            1.0|         0.0|            1.0|          0.0|             0.0|            1.0|
+| 38|    100|  7|     786|       1|   -1|       0|        3.0|            1.0|              0.0|            0.0|            1.0|         0.0|            1.0|          0.0|             0.0|            1.0|
+| 30|    309|  7|    1574|       2|   -1|       0|        1.0|            0.0|              0.0|            0.0|            1.0|         0.0|            1.0|          0.0|             0.0|            1.0|
+| 29|    199|  7|    1689|       4|   -1|       0|        0.0|            0.0|              1.0|            0.0|            1.0|         1.0|            1.0|          0.0|             0.0|            1.0|
+| 46|    460|  7|    1102|       2|   -1|       0|        1.0|            1.0|              1.0|            0.0|            1.0|         0.0|            1.0|          0.0|             0.0|            1.0|
+| 31|    703|  8|     943|       2|   -1|       0|        2.0|            1.0|              1.0|            0.0|            1.0|         0.0|            1.0|          0.0|             0.0|            1.0|
+| 35|   3837|  8|    1084|       1|   -1|       0|        0.0|            2.0|              1.0|            0.0|            1.0|         0.0|            1.0|          0.0|             0.0|            1.0|
+| 32|    611|  8|     541|       3|   -1|       0|        1.0|            1.0|              2.0|            0.0|            1.0|         0.0|            1.0|          0.0|             0.0|            1.0|
+| 49|     -8|  8|    1119|       1|   -1|       0|        4.0|            0.0|              0.0|            0.0|            1.0|         0.0|            1.0|          0.0|             0.0|            1.0|
+| 41|     55|  8|    1120|       2|   -1|       0|        3.0|            0.0|              0.0|            0.0|            1.0|         0.0|            1.0|          0.0|             0.0|            1.0|
+| 49|    168|  8|     513|       1|   -1|       0|        3.0|            2.0|              0.0|            0.0|            1.0|         1.0|            1.0|          0.0|             0.0|            1.0|
++---+-------+---+--------+--------+-----+--------+-----------+---------------+-----------------+---------------+---------------+------------+---------------+-------------+----------------+---------------+
+only showing top 20 rows
+```
+
+<p>Tiếp theo ta sẽ dùng <b>VectorAssembler</b> để đưa các feature thành dạng vector để có thể đưa vào mô hình học máy</p>
+ 
+ ```python
+from pyspark.ml.feature import VectorAssembler
+
+#Lấy tên các tất cả feature trừ deposit_indexer
+feature_names = dataframe.columns[:-1]
+
+#Khởi tạo VectorAssembler với cột input là mảng feature_names và trả về là cột features
+assembler = VectorAssembler(inputCols=feature_names, outputCol="features")
+
+#Thực hiện chuyển đổi thành vector
+transformed_data = assembler.transform(dataframe)
+
+#In ra màn hình cột features
+transformed_data.select("features").show()
+
+Output:
++--------------------+
+|            features|
++--------------------+
+|(16,[0,1,2,3,4,5,...|
+|(16,[0,1,2,3,4,5,...|
+|(16,[0,1,2,3,4,5,...|
+|(16,[0,1,2,3,4,5,...|
+|(16,[0,1,2,3,4,5,...|
+|[42.0,0.0,5.0,562...|
+|[56.0,830.0,6.0,1...|
+|[60.0,545.0,6.0,1...|
+|(16,[0,1,2,3,4,5,...|
+|[28.0,5090.0,6.0,...|
+|[38.0,100.0,7.0,7...|
+|(16,[0,1,2,3,4,5,...|
+|[29.0,199.0,7.0,1...|
+|[46.0,460.0,7.0,1...|
+|[31.0,703.0,8.0,9...|
+|[35.0,3837.0,8.0,...|
+|[32.0,611.0,8.0,5...|
+|(16,[0,1,2,3,4,5,...|
+|(16,[0,1,2,3,4,5,...|
+|[49.0,168.0,8.0,5...|
++--------------------+
+only showing top 20 rows
+ ```
+
+<p>Sau khi có cột features chứa vector, ta bắt đầu huấn luyện mô hình học máy</p>
+
+```python
+from pyspark.ml.classification import LogisticRegression
+from pyspark.ml.evaluation import MulticlassClassificationEvaluator
+
+#Khởi tạo mô hình học máy với cột dùng để train features và cột kết quá dự đoán deposit_indexer
+model = LogisticRegression(featuresCol='features', labelCol='deposit_indexer', maxIter=30)
+
+#Tách dữ liệu thành dữ liệu huấn luyện và dữ liệu dự đoán theo tỉ lệ 80% là huấn luyện và 20% là dự đoán
+(training_data, test_data) = transformed_data.randomSplit([0.8,0.2])
+
+#Thực hiện huấn luyện mô hình bằng training_data
+fit_model = model.fit(training_data)
+
+#Sau khi huấn luyện xong, ta lấy mô hình dự đoán test_data luôn
+y_pred = fit_model.transform(test_data)
+
+#Khởi tạo MulticlassClassificationEvaluator để tính độ chính xác của mô hình
+multi_evaluator = MulticlassClassificationEvaluator(labelCol='deposit_indexer', metricName='accuracy')
+print('Logistic Regression Accuracy:', multi_evaluator.evaluate(y_pred))
+
+Output:
+Logistic Regression Accuracy: 0.8163956286483126
+```
+
 <h1>Tài liệu tham khảo</h1>
 <ul>
-  <li>[1] https://viblo.asia/p/tim-hieu-ve-apache-spark-ByEZkQQW5Q0</li> 
+  <li>[1] https://viblo.asia/p/tim-hieu-ve-apache-spark-ByEZkQQW5Q0</li>
   <li>[2] https://towardsdatascience.com/machine-learning-at-scale-with-apache-spark-mllib-python-example-b32a9c74c610</li>
-  <li>[3] https://spark.apache.org/docs/latest/ml-features.html#vectorassembler</li>
+  <li>[3] https://towardsdatascience.com/machine-learning-with-pyspark-and-mllib-solving-a-binary-classification-problem-96396065d2aa</li>
+  <li>[4] https://spark.apache.org/docs/latest/ml-features.html#vectorassembler</li>
+  <li>[5] https://ichi.pro/vi/spark-for-machine-learning-su-dung-python-va-mllib-74075263465224</li>
 </ul>
